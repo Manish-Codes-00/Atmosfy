@@ -29,10 +29,10 @@ function fetchWeather(city) {
       document.getElementById('windSpeed').textContent = `💨 Wind Speed: ${data.wind.speed} m/s`;
 
       // Set Weather Icon
-      const iconCode = data.weather[0].icon; // Retrieve the icon code
-      const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`; // Construct icon URL
-      document.getElementById('weatherIcon').src = iconUrl; // Set the image source
-      document.getElementById('weatherIcon').alt = data.weather[0].description; // Set descriptive alt text
+      const iconCode = data.weather[0].icon;
+      const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+      document.getElementById('weatherIcon').src = iconUrl;
+      document.getElementById('weatherIcon').alt = data.weather[0].description;
     })
     .catch(error => {
       console.error('Error fetching weather:', error);
@@ -54,28 +54,44 @@ function fetchForecast(city) {
       const forecastContainer = document.getElementById('forecastContainer');
       forecastContainer.innerHTML = ''; // Clear previous forecast
 
-      // Loop through the forecast data (every 8th entry is approximately 24 hours apart)
-      for (let i = 0; i < data.list.length; i += 8) {
-        const day = data.list[i];
-        
-        // Extract the icon code and weather description
-        const iconCode = day.weather[0].icon; 
+      const now = new Date(); // current local time
+      const todayKey = now.toLocaleDateString(); // string for "today"
+
+      const dailyForecast = {};
+
+      data.list.forEach(item => {
+        const forecastDate = new Date(item.dt * 1000);
+
+        // Skip past times
+        if (forecastDate < now) return;
+
+        const dateKey = forecastDate.toLocaleDateString();
+
+        // Pick only one forecast per day (closest to midday)
+        if (!dailyForecast[dateKey]) {
+          dailyForecast[dateKey] = item;
+        }
+      });
+
+      // Display each day's forecast
+      Object.values(dailyForecast).forEach(day => {
+        const iconCode = day.weather[0].icon;
         const weatherDescription = day.weather[0].description;
-        
-        // Construct the icon URL using the icon code
         const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-        
-        // Create forecast display for the day
+
+        const forecastDateKey = new Date(day.dt * 1000).toLocaleDateString();
+        const title = (forecastDateKey === todayKey) ? "Today" : forecastDateKey;
+
         const forecastDiv = document.createElement('div');
         forecastDiv.classList.add('forecast-day');
         forecastDiv.innerHTML = `
-          <p>${new Date(day.dt_txt).toLocaleDateString()}</p>
+          <p>${title}</p>
           <img src="${iconUrl}" alt="${weatherDescription}" class="forecast-icon">
           <p>${weatherDescription}</p>
           <p>Temp: ${day.main.temp}°C</p>
         `;
         forecastContainer.appendChild(forecastDiv);
-      }
+      });
     })
     .catch(error => {
       console.error('Error fetching forecast:', error);
