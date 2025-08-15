@@ -12,7 +12,13 @@
 nav{
   background-color:rgb(3, 135, 158);
   }
-  
+  .brand{
+  margin-left: 5px;
+}
+.links {
+    padding-right: 0;
+    padding-left: 10px;
+}
 a{
   color: #fff;
 }
